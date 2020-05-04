@@ -40,7 +40,6 @@ void I2C2_Maestro_init(void);
 void WriteByte(uint8_t address, uint8_t data);
 uint8_t mem_read(uint8_t reg_addr);
 void RTCConfig(void);
-void env_mensaje(char *dato, uint8_t tamano);
 void UART_numero(uint32_t numero);
 
 uint8_t i2c1_mode;
@@ -58,7 +57,7 @@ int main(void)
     I2C1_Esclavo_init();
     I2C2_Maestro_init();
 
-    env_mensaje("\r\n>>", 4);
+    UART_mensaje("\r\n>>", 4);
 
     i2c1_mode = I2C1_MODE_WAITING;
     i2c1_ram_adr= 0;
@@ -82,23 +81,23 @@ int main(void)
           // ? es para mostrar el contenido de la memoria
           if(leer_uart== '?')
           {
-              env_mensaje("?\r\n", 3);
+              UART_mensaje("?\r\n", 3);
               for(i= 0; i< LONGITUD_MEMORIA; i++)
               {
-                  env_mensaje("M(", 2);
+                  UART_mensaje("M(", 2);
                   UART_numero(i);
-                  env_mensaje(")= ", 3);
+                  UART_mensaje(")= ", 3);
                   while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
                   USART_SendData(USART1, mem_read(i));// aquí lee la memoria por medio de i2c como esclavo
-                  env_mensaje("\n", 1);
+                  UART_mensaje("\n", 1);
               }
-              env_mensaje("\r\n>>", 4);
+              UART_mensaje("\r\n>>", 4);
           }
 
           // ¿ es para escribir en la memoria
           if(leer_uart== '¿')
           {
-              env_mensaje("¿\r\n", 3);
+              UART_mensaje("¿\r\n", 3);
               i= 0;
               reloj= RTC_GetCounter(); // si al cabo de 10 segundos no hay entrada, retorna al comienzo
               while((i<LONGITUD_MEMORIA) && ((RTC_GetCounter()- reloj)< 10))
@@ -107,17 +106,17 @@ int main(void)
                   {
                       caracter= (uint8_t) (USART_ReceiveData(USART1));
                       WriteByte(i, caracter); // aquí escribe en memoria por medio del i2c esclavo
-                      env_mensaje("M(", 2);
+                      UART_mensaje("M(", 2);
                       UART_numero(i);
-                      env_mensaje(")<- ", 4);
+                      UART_mensaje(")<- ", 4);
                       while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
                       USART_SendData(USART1, caracter);
-                      env_mensaje("\n", 1);
+                      UART_mensaje("\n", 1);
                       i++;
                       reloj= RTC_GetCounter();
                   }
               }
-              env_mensaje("\r\n>>", 4);
+              UART_mensaje("\r\n>>", 4);
           }
       }
   }
@@ -472,13 +471,10 @@ uint8_t mem_read(uint8_t reg_addr)
     I2C_GenerateSTART(I2C2, ENABLE); // envía condición de inicio
     while(!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT));
     //UART_mensaje("maestro: I2C_EVENT_MASTER_MODE_SELECT\r\n",39);
-    //(void)(I2C2->SR1);
     I2C_Send7bitAddress(I2C2, I2CSLAVE_ADDR, I2C_Direction_Transmitter); // envía dirección esclavo para escribir
 
     while(!I2C_CheckEvent (I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
     //UART_mensaje("maestro: I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED\r\n",53);
-    while(I2C_GetFlagStatus(I2C2, I2C_FLAG_TXE)== RESET);
-    //(void)(I2C2->SR1);
     I2C_SendData(I2C2, reg_addr); // envía dirección registro interno
 
     while(!I2C_CheckEvent (I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
@@ -487,11 +483,10 @@ uint8_t mem_read(uint8_t reg_addr)
 
     while(!I2C_CheckEvent (I2C2, I2C_EVENT_MASTER_MODE_SELECT));
     //UART_mensaje("maestro: I2C_EVENT_MASTER_MODE_SELECT\r\n",39);
-    //(void)(I2C2->SR1);
     I2C_Send7bitAddress(I2C2, I2CSLAVE_ADDR, I2C_Direction_Receiver); // envía dirección esclavo para lectura
     //UART_mensaje("maestro: \r\n",11);
     //estado(I2C2);
-    //I2C_AcknowledgeConfig (I2C2, DISABLE);
+    I2C_AcknowledgeConfig (I2C2, DISABLE);
 
     while(!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED));
     //UART_mensaje("maestro: I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED\r\n",50);
@@ -499,7 +494,6 @@ uint8_t mem_read(uint8_t reg_addr)
     while(!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_RECEIVED));
     (void)(I2C2->SR1);
     uint8_t read_reg = I2C_ReceiveData (I2C2);
-    I2C_AcknowledgeConfig (I2C2, DISABLE);
     I2C_NACKPositionConfig(I2C2, I2C_NACKPosition_Current);
     for(uint32_t t= 0; t<100000; t++);
     I2C_GenerateSTOP (I2C2, ENABLE);
@@ -528,18 +522,6 @@ void RTCConfig(void)
     while(RTC_GetFlagStatus(RTC_FLAG_RTOFF)== RESET);
     RTC_SetPrescaler(32768); // divisor del reloj externo
     RTC_SetCounter(0);
-
-    return;
-}
-
-// envía por uart1 un mensaje en dato del tamaño tamano.
-void env_mensaje(char *dato, uint8_t tamano)
-{
-    for(uint8_t apuntador= 0; apuntador< tamano; apuntador++)
-    {
-        while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
-        USART_SendData(USART1, dato[apuntador]);
-    }
 
     return;
 }
