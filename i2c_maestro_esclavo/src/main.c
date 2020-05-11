@@ -10,6 +10,9 @@
  El esclavo maneja una memoria de 10 posiciones. La dirección de entrada apunta
  a las posiciones de la memoria.
 
+     I2C1_SCL (PB6) <- I2C2_SCL (PB10)
+     I2C1_SDA (PB7) <- I2C2_SDA (PB11)
+
 **********************************************************************/
 #include "stm32f10x_conf.h"
 
