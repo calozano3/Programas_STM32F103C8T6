@@ -12,6 +12,7 @@
 
      I2C1_SCL (PB6) <- I2C2_SCL (PB10)
      I2C1_SDA (PB7) <- I2C2_SDA (PB11)
+     Poner una resistencia en PB6 y PB7, cada una a Vcc.
 
 **********************************************************************/
 #include "stm32f10x_conf.h"
