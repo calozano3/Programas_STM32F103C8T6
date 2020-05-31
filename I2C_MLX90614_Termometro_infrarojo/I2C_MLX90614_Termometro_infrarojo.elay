@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<EmBitz_layout_file>
+	<ActiveTarget name="Release" />
+	<File name="inc\stm32f10x.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="51772" topLine="123" />
+		</Cursor>
+	</File>
+	<File name="SPL\inc\stm32f10x_gpio.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="19172" topLine="339" />
+		</Cursor>
+	</File>
+	<File name="SPL\inc\stm32f10x_i2c.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="22729" topLine="522" />
+		</Cursor>
+	</File>
+	<File name="SPL\inc\stm32f10x_spi.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4769" topLine="192" />
+		</Cursor>
+	</File>
+	<File name="SPL\inc\stm32f10x_tim.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="50359" topLine="1115" />
+		</Cursor>
+	</File>
+	<File name="SPL\src\stm32f10x_gpio.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="8327" topLine="251" />
+		</Cursor>
+	</File>
+	<File name="SPL\src\stm32f10x_i2c.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="9449" topLine="286" />
+		</Cursor>
+	</File>
+	<File name="SPL\src\stm32f10x_rcc.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="37491" topLine="1074" />
+		</Cursor>
+	</File>
+	<File name="SPL\src\stm32f10x_spi.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="7275" topLine="210" />
+		</Cursor>
+	</File>
+	<File name="SPL\src\stm32f10x_tim.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="84630" topLine="2249" />
+		</Cursor>
+	</File>
+	<File name="src\main.c" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="152" topLine="246" />
+		</Cursor>
+	</File>
+</EmBitz_layout_file>
