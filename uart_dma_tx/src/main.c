@@ -9,8 +9,16 @@
    Last changed by:    $Author: $
    Last changed date:  $Date:  $
    ID:                 $Id:  $
-// ejemplo de dma aplicado al usart1 en tx, canal 4
-// lleva el contenido de memoria de 10 datos para ser transferidos por uart a una pc
+// ejemplo de dma aplicado al usart1 en tx y rx, canal 4 y 5, respectivamente
+// hace la siguiente secuencia:
+// memoria a periférico:
+// 1. lleva el contenido de memoria de 10 datos para ser transferidos por uart a una pc
+// 2. se modifica el contenido de la memoria y se envían los datos.
+// periférico a memoria:
+// 3. se espera por 10 datos enviados desde la pc
+// memoria a periférico:
+// 4. se modifica el contenido de los datos llegados a memoria y se envían a la pc
+//    usando dma con interrupción por finalización de transferencia.
 **********************************************************************/
 #include "stm32f10x_conf.h"
 
@@ -22,13 +30,14 @@ void encender_led(void);
 uint8_t leer_led(void);
 
 void UART_Init(void);
+void Sysclk_36M(void);
 
 int main(void)
 {
     LED_Init_tarjeta();
     UART_Init();
 
-    // memoria que tiene los datos para ser transferidos
+    // 1. memoria que tiene los datos para ser transferidos
     uint32_t memoria[]={'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     uint16_t num_datos= 10;
 
@@ -65,8 +74,10 @@ int main(void)
     DMA_Cmd(DMA1_Channel4, ENABLE);
 
     // espera que se haga toda la transferencia de datos
+    DMA_ClearFlag(DMA1_FLAG_TC4);
     while(DMA_GetFlagStatus(DMA1_FLAG_TC4)== RESET);
-    // cambiar los datos iniciales
+    //==================================================
+    // 2. cambiar los datos iniciales
     for(uint16_t i= 0; i<num_datos; i++)
     {
         memoria[i]= num_datos-1-i+48;// 48 es para convertir el valor en ascii
@@ -75,11 +86,48 @@ int main(void)
     DMA_Cmd(DMA1_Channel4, DISABLE);// primero se deshabilita el dma para hacer el cambio
     DMA_SetCurrDataCounter(DMA1_Channel4, num_datos);
     DMA_Cmd(DMA1_Channel4, ENABLE);
-
+    DMA_ClearFlag(DMA1_FLAG_TC4);
     // esperar la finalización de la transferencia
     while(DMA_GetFlagStatus(DMA1_FLAG_TC4)== RESET);
     // encender el led
-    encender_led();
+
+    //==================================================
+    // 3. ahora se cambia la configuración para enviar datos desde la pc
+    DMA_Cmd(DMA1_Channel4, DISABLE);
+    DMA_DeInit(DMA1_Channel4);
+    // desde donde provienen los datos y hacia donde van
+    DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralSRC;
+    DMA_Init(DMA1_Channel5, &DMA_InitStruct);
+    // habilitación del dma en usart1
+    USART_DMACmd(USART1, USART_DMAReq_Rx, ENABLE);
+    DMA_Cmd(DMA1_Channel5, ENABLE);
+    DMA_ClearFlag(DMA1_FLAG_TC5);
+    // espera que se haga toda la transferencia de datos
+    while(DMA_GetFlagStatus(DMA1_FLAG_TC5)== RESET);
+
+    //==================================================
+    // 4. ahora vuelve y envía lo que hay en el buffer modificado
+    for(uint16_t i= 0; i<num_datos; i++)
+    {
+        memoria[i]= memoria[i]-32;// 48 es para convertir el valor en ascii
+    }
+    DMA_Cmd(DMA1_Channel5, DISABLE);
+    DMA_DeInit(DMA1_Channel5);
+    // desde donde provienen los datos y hacia donde van
+    DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralDST;
+    DMA_Init(DMA1_Channel4, &DMA_InitStruct);
+    // habilitación del dma en usart1
+    USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
+    // configuración de interrupción por terminación de transferencia
+    DMA_ITConfig(DMA1_Channel4, DMA_IT_TC, ENABLE);
+    NVIC_InitTypeDef NVIC_Struct;
+    NVIC_Struct.NVIC_IRQChannel = DMA1_Channel4_IRQn;
+    NVIC_Struct.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_Struct.NVIC_IRQChannelSubPriority = 0;
+    NVIC_Struct.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_Struct);
+
+    DMA_Cmd(DMA1_Channel4, ENABLE);
 
   while(1)
   {
@@ -175,4 +223,40 @@ void UART_Init(void)
     UART_Struct.USART_BaudRate= 9600;
     USART_Init(USART1, &UART_Struct);
     USART_Cmd(USART1, ENABLE);
+}
+
+/***********************************************
+ * Inicializacion del reloj Sysclk en 72 Mhz, igual en HCLK y PCLK2.
+ * PCLK1 en la mitad
+ ***********************************************/
+void Sysclk_36M(void)
+{
+    // usa el reloj interno mientras se configura
+    RCC_SYSCLKConfig(RCC_SYSCLKSource_HSI);
+    // deshabilita el pll para poder configurarlo
+    RCC_PLLCmd(DISABLE);
+    //8Mhz/2*14= 56Mhz
+    RCC_PLLConfig(RCC_PLLSource_HSE_Div2, RCC_PLLMul_9);// 4Mx9= 36M
+    RCC_PLLCmd(ENABLE);
+    // espera que se estabilice
+    while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY)== RESET)
+    {
+    }
+    RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
+    // HCLK = SYSCLK
+    RCC_HCLKConfig( RCC_SYSCLK_Div1);
+    // PCLK2 = HCLK
+    RCC_PCLK2Config( RCC_HCLK_Div1);
+    // PCLK1 = HCLK/2
+    RCC_PCLK1Config( RCC_HCLK_Div2);
+}
+
+void DMA1_Channel4_IRQHandler(void)
+{
+    if(DMA_GetITStatus(DMA1_IT_TC4))
+    {
+        DMA_ClearITPendingBit(DMA1_IT_TC4);
+        encender_led();
+    }
+
 }

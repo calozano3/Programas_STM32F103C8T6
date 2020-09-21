@@ -203,3 +203,6 @@
 1600203274 source:c:\users\caloz\documents\arm\uart_dma_tx\src\system_stm32f10x.c
 	"stm32f10x.h"
 
+1600381863 source:c:\users\caloz\documents\arm\uart_dma_tx\src\main.c
+	"stm32f10x_conf.h"
+
