@@ -203,3 +203,6 @@
 1601308019 source:c:\users\caloz\documents\arm\adc_unamuestra_varioscanales\src\system_stm32f10x.c
 	"stm32f10x.h"
 
+1601412816 source:c:\users\caloz\documents\arm\adc_unamuestra_varioscanales\src\main.c
+	"stm32f10x_conf.h"
+
