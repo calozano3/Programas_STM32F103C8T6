@@ -203,3 +203,6 @@
 1603109678 source:c:\users\caloz\documents\arm\tim3_oc\src\system_stm32f10x.c
 	"stm32f10x.h"
 
+1603315550 source:c:\users\caloz\documents\arm\tim3_oc\src\main.c
+	"stm32f10x_conf.h"
+
